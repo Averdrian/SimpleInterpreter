@@ -11,22 +11,17 @@ data Instruction = Asign String Expression | While Expression Program
 instance Show Instruction where
     show (Asign s e) = show s ++ " = " ++ show e
 
-data Expression = I Int | V String | Suma Expression Expression | Resta Expression Expression | Mult Expression Expression
+infix 1 =:
+(=:) :: String -> Expression -> Instruction
+s =: e = Asign s e
+
+data Expression = I Int | V String | Add Expression Expression | Sub Expression Expression | Mul Expression Expression
 instance Show Expression where
     show (I x) = show x
     show (V s) = show s
-    show (Suma e1 e2) = show e1 ++ " + " ++ show e2
-    show (Resta e1 e2) = show e1 ++ " - " ++ show e2
-    show (Mult e1 e2) = show e1 ++ " * " ++ show e2
-
-
-
-evalue :: Expression -> State -> Int
-evalue (I v) _ = v
-evalue (V s) state = value $ head $ filter (\(n,_) -> n == s) state
-evalue (Suma e1 e2) state = (evalue e1 state) + (evalue e2 state)
-evalue (Resta e1 e2) state = (evalue e1 state) - (evalue e2 state)
-evalue (Mult e1 e2) state = (evalue e1 state) * (evalue e2 state)
+    show (Add e1 e2) = show e1 ++ " + " ++ show e2
+    show (Sub e1 e2) = show e1 ++ " - " ++ show e2
+    show (Mul e1 e2) = show e1 ++ " * " ++ show e2
 
 
 value :: Variable -> Int
@@ -34,19 +29,25 @@ value (_, v) = v
 
 infixl 6 +:
 (+:) :: Expression -> Expression -> Expression 
-e1 +: e2 = Suma e1 e2
+e1 +: e2 = Add e1 e2
 
 infixl 6 -:
 (-:) :: Expression -> Expression -> Expression
-e1 -: e2 = Resta e1 e2
+e1 -: e2 = Sub e1 e2
 
 infixl 7 *:
 (*:) :: Expression -> Expression -> Expression
-e1 *: e2 = Mult e1 e2
+e1 *: e2 = Mul e1 e2
 
-infixl 1 =:
-(=:) :: String -> Expression -> Instruction
-s =: e = Asign s e
+
+
+evalue :: Expression -> State -> Int
+evalue (I v) _ = v
+evalue (V s) state = value $ head $ filter (\(n,_) -> n == s) state
+evalue (Add e1 e2) state = (evalue e1 state) + (evalue e2 state)
+evalue (Sub e1 e2) state = (evalue e1 state) - (evalue e2 state)
+evalue (Mul e1 e2) state = (evalue e1 state) * (evalue e2 state)
+
 
 
 findAndReplace :: Variable -> State -> State

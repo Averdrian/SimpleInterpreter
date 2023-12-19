@@ -105,7 +105,11 @@ executeInstruction (While cond ins) state = if (evalueCond cond state) then exec
 execute :: Program -> State -> State
 execute (ins) s0 = foldl (\x y -> executeInstruction y x) s0 ins
 
-ejecuta=execute
+getResult :: State -> Int
+getResult state = (\(n,v) -> v) $ head $ filter (\(n,v) -> n == "R") state
+
+ejecuta :: Program -> State -> Int
+ejecuta prog st = getResult $ execute prog st
 
 factorial :: Program
 factorial = ["Y" =: V "X","R" =: I 1, While (I 0 <: V "Y") ["R" =: V "R" *: V "Y", "Y" =: V "Y" -: I 1]]

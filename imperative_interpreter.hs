@@ -7,9 +7,9 @@ type Program = [Instruction] --un programas es simplemente una lista de instrucc
 
 --tenemos dos tipos de isntrucciones, la asignacion que iguala al identificador dado el valor de la expresion
 --y la expresion condicional, que ejecutara sus instrucciones mientras su condicion sea cierta
-data Instruction = Asign String Expression | While CondExpression Program
-instance Show Instruction where
-    show (Asign s e) = show s ++ " = " ++ show e
+data Instruction = Asign String Expression | While CondExpression Program | Cond CondExpression Program Program deriving (Show, Read) 
+-- instance Show Instruction where #TODO: Mirar los show de esto
+--     show (Asign s e) = show s ++ " = " ++ show e
 
 infix 1 =:
 (=:) :: String -> Expression -> Instruction
@@ -17,7 +17,7 @@ s =: e = Asign s e
 
 
 
-data Expression = I Int | V String | Add Expression Expression | Sub Expression Expression | Mul Expression Expression
+data Expression = I Int | V String | Add Expression Expression | Sub Expression Expression | Mul Expression Expression deriving Read
 instance Show Expression where
     show (I x) = show x
     show (V s) = show s
@@ -39,7 +39,7 @@ e1 *: e2 = Mul e1 e2
 
 
 
-data CondExpression = B Bool | Eq Expression Expression | UnEq Expression Expression | Less Expression Expression | Bigger Expression Expression | LesEq Expression Expression | BigEq Expression Expression | And CondExpression CondExpression | Or CondExpression CondExpression | Not CondExpression deriving Show
+data CondExpression = B Bool | Eq Expression Expression | UnEq Expression Expression | Less Expression Expression | Bigger Expression Expression | LesEq Expression Expression | BigEq Expression Expression | And CondExpression CondExpression | Or CondExpression CondExpression | Not CondExpression deriving (Show, Read)
 
 infix 4 ==:
 e1 ==: e2 = Eq e1 e2
@@ -101,6 +101,8 @@ findAndReplace (s,v) ((sv,vv):xs) = if s==sv then (s,v):xs else (sv,vv):(findAnd
 executeInstruction :: Instruction -> State -> State
 executeInstruction (Asign var expr) state = findAndReplace (var,evalue expr state) state
 executeInstruction (While cond ins) state = if (evalueCond cond state) then executeInstruction (While cond ins) (execute ins state) else state
+executeInstruction (Cond cond true_ins false_ins) state = if (evalueCond cond state) then execute true_ins state else execute false_ins state
+
 
 execute :: Program -> State -> State
 execute (ins) s0 = foldl (\x y -> executeInstruction y x) s0 ins
@@ -114,5 +116,8 @@ ejecuta prog st = getResult $ execute prog st
 factorial :: Program
 factorial = ["Y" =: V "X","R" =: I 1, While (I 0 <: V "Y") ["R" =: V "R" *: V "Y", "Y" =: V "Y" -: I 1]]
 
+
+programa_test = [Cond (V "X" ==: I 3) ["R" =: I 2] ["R" =: I 1]]
+
 s0 :: State
-s0 = [("X",20)]
+s0 = [("X",3)]

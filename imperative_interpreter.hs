@@ -7,9 +7,21 @@ type Program = [Instruction] --un programas es simplemente una lista de instrucc
 
 --tenemos dos tipos de isntrucciones, la asignacion que iguala al identificador dado el valor de la expresion
 --y la expresion condicional, que ejecutara sus instrucciones mientras su condicion sea cierta
-data Instruction = Asign String Expression | While CondExpression Program | Cond CondExpression Program Program deriving (Show, Read) 
+data Instruction = Asign String Expression | While CondExpression Program | Cond CondExpression Program Program deriving Show
 -- instance Show Instruction where #TODO: Mirar los show de esto
 --     show (Asign s e) = show s ++ " = " ++ show e
+
+instance Read Instruction where
+    readsPrec _ str = [(readInstruction str, "")]
+
+readInstruction :: String -> Instruction
+readInstruction str = case words str of
+    [var, "=:", expStr] -> Asign var (read expStr)
+    ["While", condStr, insStr] -> While (read condStr) (read insStr)
+    ["Cond", condStr, trueStr, falseStr] -> Cond (read condStr) (read trueStr) (read falseStr)
+    _ -> error "Formato de instrucción no válido"
+
+
 
 infix 1 =:
 (=:) :: String -> Expression -> Instruction
@@ -121,3 +133,17 @@ programa_test = [Cond (V "X" ==: I 3) ["R" =: I 2] ["R" =: I 1]]
 
 s0 :: State
 s0 = [("X",3)]
+
+
+loadFile =
+    do 
+        putStr "Escribe el nombre del fichero a cargar: "
+        input <- getLine
+        content <- readFile input
+        -- let lineas = parseFile content
+        let programa = read content :: Program
+        return programa
+
+
+-- parseFile :: [Char] ->[Instruction]
+-- parseFile xs = lines xs
